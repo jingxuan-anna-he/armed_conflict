@@ -1,0 +1,53 @@
+---
+title: "week 2 assignment part1"
+author: "Jingxuan He"
+date: "2024-09-16"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(here)
+here()
+
+rawdat <- read.csv(here("original", "maternalmortality.csv"), header=TRUE)
+```
+
+```{r}
+library(dplyr)
+df <- select(rawdat, 'Country.Name', 'X2000':'X2019')
+```
+
+
+```{r}
+library(tidyr)
+library(stringr)
+library(readr)
+#df_long <- pivot_longer(df, starts_with("X"), names_to = "Year", values_to = "MatMor")
+
+df_long <- df %>%
+  pivot_longer(!Country.Name, names_to = "Year", values_to = "MatMor") %>%
+  mutate(Year = str_replace_all(Year, "X", ""), 
+         Year = parse_number(Year))
+```
+
+
+```{r}
+library(usethis) 
+
+usethis::use_git_config(user.name = "jingxuan-anna-he", 
+                        user.email = "jingxuan.he@mail.utoronto.ca")
+
+# to confirm, generate a git situation-report, 
+# your user name and email should appear under Git config (global)
+usethis::git_sitrep()
+```
+```{r}
+usethis::use_git()
+#usethis::create_github_token()
+usethis::use_github()
+```
+

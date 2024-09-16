@@ -1,0 +1,38 @@
+---
+title: "week 2 assignment part2"
+author: "Jingxuan He"
+date: "2024-09-16"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(here)
+here()
+
+disaster_raw <- read.csv(here("original", "disaster.csv"), header=TRUE)
+
+```
+
+```{r}
+library(dplyr)
+disaster <- filter(disaster_raw, Disaster.Type=="Earthquake" | Disaster.Type=="Drought", Year>=2000,Year<=2019)
+
+disaster <- select(disaster, "Year", "ISO", "Disaster.Type")
+
+disaster$drought <- ifelse(disaster$Disaster.Type == "Drought", 1, 0)
+disaster$earthquake <- ifelse(disaster$Disaster.Type == "Earthquake", 1, 0)
+```
+
+```{r}
+disaster_sum <- disaster %>% 
+  group_by(Year, ISO) %>%
+  summarize(drought = sum(drought),
+           earthquake = sum(earthquake))
+```
+
+
+
