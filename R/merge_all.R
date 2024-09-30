@@ -1,4 +1,4 @@
-
+library(here)
 covariate <- read.csv(here("original", "covariates.csv"), header = TRUE)
 
 source(here("R", "create_mortality.R"))

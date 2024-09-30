@@ -1,4 +1,4 @@
-
+library(here)
 disaster <- read.csv(here("original", "disaster.csv"), header = TRUE)
 
 disaster |>

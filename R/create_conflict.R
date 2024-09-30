@@ -1,4 +1,4 @@
-
+library(here)
 conflict <- read.csv(here("original", "conflictdata.csv"), header = TRUE)
 
 conflict$year <- conflict$year+1

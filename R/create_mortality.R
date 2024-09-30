@@ -1,3 +1,6 @@
+library(here)
+library(dplyr)
+library(tidyverse)
 
 # part a)
 matmor <- read.csv(here("original", "maternalmortality.csv"), header = TRUE)
@@ -5,8 +8,6 @@ infmor <- read.csv(here("original", "infantmortality.csv"), header = TRUE)
 neomor <- read.csv(here("original", "neonatalmortality.csv"), header = TRUE)
 under5mor <- read.csv(here("original", "under5mortality.csv"), header = TRUE)
 
-library(dplyr)
-library(tidyverse)
 create_mortality <- function(df, value_name){
   data <- df
   data |>
