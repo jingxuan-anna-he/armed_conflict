@@ -1,0 +1,95 @@
+---
+title: "EDA Armed Conflict"
+author: "Jingxuan (Anna) He"
+format: pdf
+editor: visual
+---
+
+## Quarto
+
+```{r}
+library(here)
+library(tidyverse)
+
+finaldata <- read.csv(here("data", "finaldata.csv"), header = TRUE)
+names(finaldata)
+dim(finaldata)
+```
+
+```{r}
+finaldata |>
+dplyr::filter(country_name == "Canada")
+```
+
+```{r}
+finaldata |>
+dplyr::filter(country_name == "Ecuador")
+```
+
+## summaries for all variabales 
+```{r}
+finaldata |>
+  summary()
+```
+From the summary function, we are able to know which predictor has missing values. We can also see the rough distribution (skewed or normal, outliers) for continuous variables.
+There are 62 missing values in GDP, 20 missing values in population density, urban residence, male education, temperature, rainfall, infant mortality, neonatal mortality, and under5 mortality, and 426 missing values in maternal mortality.
+
+
+```{r}
+table(finaldata$armconflict)
+```
+
+## Distribution of mortality ratios
+
+```{r}
+lapply(X=c("MatMor", "InfMor", "NeoMor", "Under5Mor"), FUN=function(s)
+  hist(finaldata[, s], xlab=s, main=paste("Histogram of", s)))
+
+```
+
+By scanning the distribution of 4 types of mortality ratios, I find except MatMor, all other three types are roughly concentrated below 50. The ranges of the ratios are below 200. However, MatMor spans from 0 and 2480, and most of the data concentrated in the first bar. Also, the empty area on the tail shows it may have outliers.
+
+## Distributions of 10 covariates
+
+```{r}
+lapply(X=c("gdp1000", "OECD", "popdens", "urban", "agedep", "male_edu", "temp", 
+           "rainfall1000", "drought", "earthquake"), FUN=function(s)
+  hist(finaldata[, s], xlab=s, main=paste("Histogram of", s)))
+```
+
+The distribution of GDP is skewed to the right, and the empty area on the right tail may show outliers of the variable. Most of the continuous variables are not normally distributed.
+
+
+## mortality rates vs total death
+```{r}
+mor <- c("MatMor", "InfMor", "NeoMor", "Under5Mor") 
+for (i in 1:4) {
+  plot(log(finaldata$totdeath), log(finaldata[[mor[i]]]), ylab=mor[i])
+}
+```
+Since the original range was too wide, I applied log transformation on x and y axis. There's no obvious trend between mortality rates and total death.
+
+
+
+## Mortality rate ove time by armed conflict
+```{r}
+
+ggplot(finaldata, aes(x = year, y = MatMor, color = factor(armconflict))) +
+  geom_line(stat = "summary", fun = "mean") +
+  labs(x = "Year", y = "Mean Maternal Mortality Rate", color = "Armed Conflict")
+
+ggplot(finaldata, aes(x = year, y = InfMor, color = factor(armconflict))) +
+  geom_line(stat = "summary", fun = "mean") +
+  labs(x = "Year", y = "Mean Infant Mortality Rate", color = "Armed Conflict")
+
+ggplot(finaldata, aes(x = year, y = Under5Mor, color = factor(armconflict))) +
+  geom_line(stat = "summary", fun = "mean") +
+  labs(x = "Year", y = "Mean Under-5 Mortality Rate", color = "Armed Conflict")
+
+```
+
+The three mortality rates show decreasing trends over year for both armed conflict and non armed conflict cases, which may indicate improved health care systems.
+
+
+
+
