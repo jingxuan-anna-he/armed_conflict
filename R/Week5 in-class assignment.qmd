@@ -1,0 +1,89 @@
+---
+title: "Week5 in-class assignment"
+author: "Jingxuan He"
+format: pdf
+editor: visual
+---
+
+
+```{r, echo=FALSE}
+library(here)
+library(tidyverse)
+library(table1)
+finaldata <- read.csv(here("data", "finaldata.csv"), header = TRUE)
+```
+
+
+# part 1
+## table 1
+```{r}
+data_table <- finaldata |>
+  group_by(country_name) |>
+  mutate(
+    ever_conflict = ifelse(sum(armconflict, na.rm = TRUE) > 0, "Ever", "Never")) |>
+  ungroup()
+```
+
+
+```{r}
+data_country <- data_table |>
+  group_by(country_name) |>
+  summarise(
+    gdp1000 = mean(gdp1000, na.rm = TRUE),
+    #OECD = sum(OECD == 1, na.rm = TRUE),
+    popdens = mean(popdens, na.rm = TRUE),
+    urban = mean(urban, na.rm = TRUE),
+    agedep = mean(agedep, na.rm = TRUE),
+    male_edu = mean(male_edu, na.rm = TRUE),
+    temp = mean(temp, na.rm = TRUE),
+    rainfall1000 = mean(rainfall1000, na.rm = TRUE),
+    #drought = sum(drought == 1, na.rm = TRUE),
+    #earthquake = sum(earthquake == 1, na.rm = TRUE),
+    ever_conflict = ifelse(sum(armconflict, na.rm = TRUE) > 0, "Ever", "Never"),
+    ever_OECD = ifelse(sum(OECD, na.rm = TRUE) > 0, "Ever", "Never"),
+    ever_drought = ifelse(sum(drought, na.rm = TRUE) > 0, "Ever", "Never"),
+    ever_earthquake = ifelse(sum(earthquake, na.rm = TRUE) > 0, "Ever", "Never")
+)
+```
+
+
+```{r}
+table1(~ gdp1000 + popdens + urban + agedep + male_edu + temp + 
+         rainfall1000 + ever_OECD + ever_drought + ever_earthquake | ever_conflict, 
+       data=data_country)
+```
+
+
+
+
+# Part 2
+## descriptive figure
+```{r}
+select_country <- finaldata |>
+  dplyr::select(country_name, ISO, year, MatMor) |>
+  dplyr::filter(year < 2018) |>
+  arrange(ISO, year) |>
+  group_by(ISO) |>
+  mutate(diffmatmor = MatMor - MatMor[1L]) |>
+  filter(year==2017 & diffmatmor > 0) |> 
+  select(country_name, ISO)
+```
+
+
+```{r}
+data_inc_matmor <- finaldata |>
+  inner_join(select_country, by = "ISO")
+```
+
+
+```{r}
+data_inc_matmor |>
+  ggplot(aes(x = year, y = MatMor, group = ISO)) +
+  geom_line(aes(color = as.factor(ISO)), alpha = 0.5) +
+  xlim(c(2000,2017)) +
+  scale_y_continuous(trans='log10') + 
+  labs(y = "Maternal mortality", x = "Year", color = "ISO") + 
+  theme_bw()
+```
+
+
