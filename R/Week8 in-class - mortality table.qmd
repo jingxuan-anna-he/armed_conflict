@@ -4,10 +4,11 @@ format: html
 editor: visual
 ---
 
-```{r, echo=FALSE}
+```{r}
 library(here)
 library(plm)
 library(texreg)
+
 ```
 
 ```{r}
