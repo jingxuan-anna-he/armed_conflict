@@ -1,0 +1,52 @@
+---
+title: "Week8 inclass assignment - mortality table"
+format: html
+editor: visual
+---
+
+```{r, echo=FALSE}
+library(here)
+library(plm)
+library(texreg)
+```
+
+```{r}
+#| output: asis
+
+finaldata <- read.csv(here("data", "finaldata.csv"))
+finaldata$pctpopdens <- finaldata$popdens / 100
+finaldata$log_gdp1000 <- log(finaldata$gdp1000)
+
+preds <- as.formula(" ~ armconflict + log_gdp1000 + OECD + pctpopdens + urban + 
+                  agedep + male_edu + temp + rainfall1000 + earthquake + drought") 
+                 
+
+matmormod <- plm(update.formula(preds, MatMor ~ .), 
+                index = c("ISO", "year"),
+                effect = "twoways",
+                model = "within", data = finaldata)
+un5mormod <- plm(update.formula(preds, Under5Mor ~ .), 
+                index = c("ISO", "year"),
+                effect = "twoways",
+                model = "within", data = finaldata)
+infmormod <- plm(update.formula(preds, InfMor ~ .), 
+                index = c("ISO", "year"),
+                effect = "twoways",
+                model = "within", data = finaldata)
+neomormod <- plm(update.formula(preds, NeoMor ~ .), 
+                index = c("ISO", "year"),
+                effect = "twoways",
+                model = "within", data = finaldata)
+
+htmlreg(list(matmormod, un5mormod, infmormod, neomormod),
+        ci.force = TRUE,
+        custom.model.names = c("Maternal Mortality", "Under5 Mortality", 
+                               "Infant Mortality", "Neonatal Mortality"))
+```
+
+
+
+
+
+
+
