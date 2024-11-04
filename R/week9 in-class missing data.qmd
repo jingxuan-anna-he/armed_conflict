@@ -1,0 +1,124 @@
+---
+title: "Week9 in-class"
+format: html
+editor: visual
+---
+
+```{r}
+library(dplyr)
+library(naniar)
+library(mice)
+library(here)
+library(texreg)
+```
+
+```{r}
+finaldata <- read.csv(here("data", "finaldata.csv"))
+finaldata$pctpopdens <- finaldata$popdens / 100
+finaldata$log_gdp1000 <- log(finaldata$gdp1000)
+```
+
+```{r}
+finaldata |>
+  arrange(year, ISO) |>
+  dplyr::select(-country_name, -ISO, -region, -year) |>
+  vis_miss()
+```
+
+```{r}
+midata <- finaldata |>
+  mutate(ISOnum = as.numeric(as.factor(finaldata$ISO))) |>
+  select(-country_name, -ISO)
+```
+
+```{r}
+mice0  <- mice(midata, seed = 100, m = 5, maxit = 0, print = F)
+```
+
+
+```{r}
+meth <- mice0$method
+meth[c("urban", "male_edu", "temp", "rainfall1000", "MatMor", "InfMor", "NeoMor", 
+       "Under5Mor", "log_gdp1000", "pctpopdens")] <- "2l.lmer"
+
+pred <- mice0$predictorMatrix
+pred[c("urban", "male_edu", "temp", "rainfall1000", "MatMor", "InfMor", "NeoMor", 
+       "Under5Mor", "log_gdp1000", "pctpopdens"), "ISOnum"] <- -2
+```
+
+```{r}
+mice.multi.out  <- mice(midata, seed = 100, m = 10, maxit = 20,
+                        method = meth,
+                        predictorMatrix = pred)
+```
+
+
+```{r}
+plot(mice.multi.out)
+```
+
+```{r}
+preds <- as.formula(" ~ armconflict + log_gdp1000 + OECD + pctpopdens + urban + 
+                  agedep + male_edu + temp + rainfall1000 + earthquake + drought +
+                  as.factor(ISO) + as.factor(year)")
+
+matmormod <- lm(update.formula(preds, MatMor ~ .), data = finaldata)
+un5mormod <- lm(update.formula(preds, Under5Mor ~ .), data = finaldata)
+infmormod <- lm(update.formula(preds, InfMor ~ .), data = finaldata)
+neomormod <- lm(update.formula(preds, NeoMor ~ .), data = finaldata)
+```
+
+
+
+```{r}
+fit.mat.mice <- with(mice.multi.out, lm(MatMor ~ -1 + armconflict + log_gdp1000 + 
+                                          OECD + pctpopdens + urban + 
+                  agedep + male_edu + temp + rainfall1000 + earthquake + drought +
+                  as.factor(ISOnum) + as.factor(year)))
+out.mat.mice <- pool(fit.mat.mice)
+summary(out.mat.mice)
+
+```
+
+```{r}
+fit.under5.mice <- with(mice.multi.out, lm(Under5Mor ~ -1 + armconflict + log_gdp1000 + 
+                                             OECD + pctpopdens + urban + 
+                  agedep + male_edu + temp + rainfall1000 + earthquake + drought +
+                  as.factor(ISOnum) + as.factor(year)))
+
+out.under5.mice <- pool(fit.under5.mice)
+summary(out.under5.mice)
+```
+
+
+```{r}
+fit.inf.mice <- with(mice.multi.out, lm(InfMor ~ -1 + armconflict + log_gdp1000 + 
+                                          OECD + pctpopdens + urban + 
+                  agedep + male_edu + temp + rainfall1000 + earthquake + drought +
+                  as.factor(ISOnum) + as.factor(year)))
+
+out.inf.mice <- pool(fit.inf.mice)
+summary(out.inf.mice)
+```
+
+```{r}
+fit.neo.mice <- with(mice.multi.out, lm(NeoMor ~ -1 + armconflict + log_gdp1000 + 
+                                          OECD + pctpopdens + urban + 
+                  agedep + male_edu + temp + rainfall1000 + earthquake + drought +
+                  as.factor(ISOnum) + as.factor(year)))
+out.neo.mice <- pool(fit.neo.mice)
+summary(out.neo.mice)
+```
+
+```{r}
+
+screenreg(list(matmormod, out.mat.mice, un5mormod, out.under5.mice, infmormod, 
+               out.inf.mice, neomormod, out.neo.mice), 
+       ci.force = TRUE,
+       custom.model.names = c("Mat CC", "Mat MI", "Un5 CC", "Un5 MI", "Inf CC", 
+                              "Inf MI", "Neo CC", "Neo MI"))
+
+#save(tosave, file = here("output", "mi_output.Rdata"))
+
+```
+
